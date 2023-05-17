@@ -39,11 +39,15 @@ void MX_TIM4_Init(void)
 
   /* USER CODE BEGIN TIM4_Init 1 */
 
+  // T = (PRS + 1)(ARR +1) / f
+  // T - pwm period 
+  // f - main clock speed
+  
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 15;
+  htim4.Init.Prescaler = 3;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 19;
+  htim4.Init.Period = 79;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
