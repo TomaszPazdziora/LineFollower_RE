@@ -16,15 +16,16 @@ int rightMotorSpeed = 0;
 void clearReadings();
 void measure();
 
-int percentToDuty(int percent);
-void moveLeftMotor(int dir, int speedInPercent);
-void moveRightMotor(int dir, int speedInPercent);
-void moveMotors();
+void moveLeftMotor(int speed);
+void moveRightMotor(int speed);
 
 
 /*--------- PD VARIABLES ----------*/
 
-#define MAX_SPEED 70
+#define SET_SPEED 70
+#define MAX_SPEED ARR_VAL
+#define MIN_SPEED 0
+
 bool isRunning = true;
 
 const float KP = 1;
@@ -33,11 +34,10 @@ float PD = 0;
 
 // int weights[SENSOR_NUMBER] = {-20, -15, -10, -8, -5, -3, -1, 1, 3, 5, 8, 10, 15, 20};
 int weights[SENSOR_NUMBER] = {-30, 30};
-int speedDelay = 0;
+int speedDelta = 0;
 
 float error = 0;
 float prevError = 0;
-int average = 0;
 int sum = 0;
 int sensorsDetected = 0;
 
@@ -50,34 +50,27 @@ extern void ExStartDriveTask(void const * argument) {
   /* USER CODE BEGIN StartDriveTask */
   /* Infinite loop */
 
- 
+	// set left motor dir
+	HAL_GPIO_WritePin(DRIVR1_GPIO_Port, DRIVR1_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(DRIVL1_GPIO_Port, DRIVL1_Pin, GPIO_PIN_SET);
+
+	// set right motor dir
+	HAL_GPIO_WritePin(DRIVR2_GPIO_Port, DRIVR2_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(DRIVL2_GPIO_Port, DRIVL2_Pin, GPIO_PIN_SET);
 
   for(;;)
   {
-    if (isRunning) {
+	if (isRunning) {
        measure(); 
 	   countPDvalues();
-	   moveMotors();
+	   TIM4->CCR1 = leftMotorSpeed;
+	   TIM4->CCR2 = rightMotorSpeed;
 	   osDelay(100);
     }
-	
-
-
-	// for(int i = 0; i <= 100; i++) {
-	// 	moveLeftMotor(FORWARD, i);
-	// 	moveRightMotor(BACKWARD, 100 - i);
-	// 	osDelay(100);
-	// }
-
-	// for(int i = 0; i <= 100; i++) {
-	// 	moveLeftMotor(FORWARD, 100 - i);
-	// 	moveRightMotor(BACKWARD, i);
-	// 	osDelay(100);
-	// }
-	
-	// osDelay(SENSOR_DELAY);
-    // measure();
-    // osDelay(SENSOR_DELAY);
+	else {
+		TIM4->CCR1 = 0;
+	   	TIM4->CCR2 = 0;
+	}
   }
   /* USER CODE END StartDriveTask */
 }
@@ -109,43 +102,28 @@ void clearReadings() {
 
 /* ---- MOTOR FUNCTIONS ---- */
 
-int percentToDuty(int percent) {
-	// 79 = 100 % pwm duty
-	// 0 = 0 % pwm duty
-	// duty = CRR / ARR
-	// CRRx where 'x' means channel
-	return (percent * (ARR_TIM4+1)/100 - 1);
+
+// 79 = 100 % pwm duty
+// 0 = 0 % pwm duty
+// duty = CRR / ARR
+// CRRx where 'x' means channel
+
+void moveLeftMotor(int speed) {
+    TIM4->CCR1 = speed;
+
+	HAL_GPIO_WritePin(DRIVR1_GPIO_Port, DRIVR1_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(DRIVL1_GPIO_Port, DRIVL1_Pin, GPIO_PIN_SET);
+	// HAL_GPIO_WritePin(DRIVR1_GPIO_Port, DRIVR1_Pin, GPIO_PIN_SET);
+	// HAL_GPIO_WritePin(DRIVL1_GPIO_Port, DRIVL1_Pin, GPIO_PIN_RESET);
 }
 
-void moveLeftMotor(int dir, int speedInPercent) {
-    TIM4->CCR1 = percentToDuty(speedInPercent);
-
-	if (dir == FORWARD) {
-		HAL_GPIO_WritePin(DRIVR1_GPIO_Port, DRIVR1_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(DRIVL1_GPIO_Port, DRIVL1_Pin, GPIO_PIN_SET);
-	}
-	else {
-		HAL_GPIO_WritePin(DRIVR1_GPIO_Port, DRIVR1_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(DRIVL1_GPIO_Port, DRIVL1_Pin, GPIO_PIN_RESET);
-	}
-}
-
-void moveRightMotor(int dir, int speedInPercent) {
-    TIM4->CCR2 = percentToDuty(speedInPercent);
-
-	if (dir == FORWARD) {
-		HAL_GPIO_WritePin(DRIVR2_GPIO_Port, DRIVR2_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(DRIVL2_GPIO_Port, DRIVL2_Pin, GPIO_PIN_SET);
-	}
-	else {
-		HAL_GPIO_WritePin(DRIVR2_GPIO_Port, DRIVR2_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(DRIVL2_GPIO_Port, DRIVL2_Pin, GPIO_PIN_RESET);
-	}
-}
-
-void moveMotors() {
-	moveLeftMotor(FORWARD, leftMotorSpeed);
-	moveRightMotor(FORWARD, rightMotorSpeed);
+void moveRightMotor(int speed) {
+    TIM4->CCR2 = speed;
+	
+	HAL_GPIO_WritePin(DRIVR2_GPIO_Port, DRIVR2_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(DRIVL2_GPIO_Port, DRIVL2_Pin, GPIO_PIN_SET);
+	// HAL_GPIO_WritePin(DRIVR2_GPIO_Port, DRIVR2_Pin, GPIO_PIN_SET);
+	// HAL_GPIO_WritePin(DRIVL2_GPIO_Port, DRIVL2_Pin, GPIO_PIN_RESET);
 }
 
 
@@ -153,9 +131,8 @@ void moveMotors() {
 /* ---- PD algorithm ---- */
 
 void countPDvalues() {
-	average = 0;
 	sum = 0;
-	speedDelay = 0;
+	speedDelta = 0;
 	sensorsDetected = 0;
 
     for (int i = 0; i < SENSOR_NUMBER; i++) {
@@ -165,21 +142,16 @@ void countPDvalues() {
 		}
 	}
 
-	average = sum/sensorsDetected;
-
 	prevError = error;
-	error = average;
-	speedDelay = (KP * error) + (KD * (error - prevError));
+	error = sum/sensorsDetected;
+	speedDelta = (KP * error) + (KD * (error - prevError));
 
-	if (speedDelay > MAX_SPEED) speedDelay = MAX_SPEED;
-	if (speedDelay < -MAX_SPEED) speedDelay = -MAX_SPEED;
+	leftMotorSpeed = SET_SPEED - speedDelta;
+	rightMotorSpeed = SET_SPEED + speedDelta;
 
-	if (speedDelay < 0) {
-		rightMotorSpeed = MAX_SPEED;
-      	leftMotorSpeed = MAX_SPEED - speedDelay;
-	}
-	else {
-      	rightMotorSpeed = MAX_SPEED - speedDelay;
-      	leftMotorSpeed = MAX_SPEED;
-    }
+	if (leftMotorSpeed > MAX_SPEED) leftMotorSpeed = MAX_SPEED;
+	else if (leftMotorSpeed < MIN_SPEED) leftMotorSpeed = MIN_SPEED;
+	
+	if (rightMotorSpeed > MAX_SPEED) rightMotorSpeed = MAX_SPEED;
+	else if (rightMotorSpeed < MIN_SPEED) rightMotorSpeed = MIN_SPEED;
 }
