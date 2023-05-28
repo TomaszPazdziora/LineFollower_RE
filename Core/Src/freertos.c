@@ -26,7 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 //#include "driver.c"
-#include "comm.c"
+//#include "comm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,6 +49,8 @@
 
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
+osThreadId CommTaskHandle;
+osThreadId DriveTaskHandle;
 osSemaphoreId CommSemaphoreHandle;
 
 /* Private function prototypes -----------------------------------------------*/
@@ -57,6 +59,8 @@ osSemaphoreId CommSemaphoreHandle;
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
+void StartCommTask(void const * argument);
+void StartDriveTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -112,6 +116,14 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
+  /* definition and creation of CommTask */
+  osThreadDef(CommTask, StartCommTask, osPriorityIdle, 0, 128);
+  CommTaskHandle = osThreadCreate(osThread(CommTask), NULL);
+
+  /* definition and creation of DriveTask */
+  osThreadDef(DriveTask, StartDriveTask, osPriorityIdle, 0, 128);
+  DriveTaskHandle = osThreadCreate(osThread(DriveTask), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -128,13 +140,51 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_WritePin(LED_CTR_GPIO_Port, LED_CTR_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_10, GPIO_PIN_SET);
+    osDelay(1);
   }
   /* USER CODE END StartDefaultTask */
+}
+
+/* USER CODE BEGIN Header_StartCommTask */
+/**
+* @brief Function implementing the CommTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartCommTask */
+void StartCommTask(void const * argument)
+{
+  /* USER CODE BEGIN StartCommTask */
+  /* Infinite loop */
+  ExStartCommTask(argument);
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartCommTask */
+}
+
+/* USER CODE BEGIN Header_StartDriveTask */
+/**
+* @brief Function implementing the DriveTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartDriveTask */
+void StartDriveTask(void const * argument)
+{
+  /* USER CODE BEGIN StartDriveTask */
+  /* Infinite loop */
+  
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartDriveTask */
 }
 
 /* Private application code --------------------------------------------------*/
