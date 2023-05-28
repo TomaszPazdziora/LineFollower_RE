@@ -75,6 +75,9 @@ void Error_Handler(void);
 #define TRESHOLD 1024
 #define CLEARED_READING 2048
 #define SENSOR_DELAY 200
+
+#define PRESC_VAL 1
+#define ARR_VAL 999
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
