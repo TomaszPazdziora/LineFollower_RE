@@ -2,7 +2,7 @@
 #include "task.h"
 #include "cmsis_os.h"
 #include "adc.h"
-
+#include "driver.h"
 #define ARR_TIM4 79
 #define FORWARD 1
 #define BACKWARD 2
@@ -26,7 +26,7 @@ void moveRightMotor(int speed);
 #define MAX_SPEED ARR_VAL
 #define MIN_SPEED 0
 
-bool isRunning = true;
+//bool isRunning = true;
 
 const float KP = 1;
 const float KD = 0.2;

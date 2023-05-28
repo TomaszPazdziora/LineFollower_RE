@@ -38,7 +38,9 @@
     "main.h": "c",
     "cmsis_os.h": "c",
     "freertos.h": "c",
-    "cstdlib": "c"
+    "cstdlib": "c",
+    "usart.h": "c",
+    "comm.h": "c"
   },
   "cortex-debug.variableUseNaturalFormat": false
 }

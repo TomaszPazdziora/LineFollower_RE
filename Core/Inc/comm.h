@@ -1,7 +1,6 @@
-#include "usart.h"
-
 #ifndef __COMM_H__
 #define __COMM_H__
+#include "usart.h"
 
 #define MSIZE 4
 

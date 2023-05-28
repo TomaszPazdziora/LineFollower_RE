@@ -179,7 +179,7 @@ void StartDriveTask(void const * argument)
 {
   /* USER CODE BEGIN StartDriveTask */
   /* Infinite loop */
-  
+  ExStartDriveTask(argument);
   for(;;)
   {
     osDelay(1);

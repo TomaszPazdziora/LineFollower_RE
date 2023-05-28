@@ -1,9 +1,10 @@
 #include "comm.h"
 
+extern bool isRunning;
 
   void ExStartCommTask(void const * argument){
     //USART6_IRQHandler();
-    HAL_UART_Receive_IT(&huart6, &Rx_data, 1);
+    HAL_UART_Receive_IT(&huart6, &Rx_data, 10);
     HAL_UART_Transmit_IT(&huart6, mess, 4);
     for(;;) {
       while (HAL_UART_GetState(&huart6) == HAL_UART_STATE_BUSY_TX ||
@@ -45,11 +46,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	case 0: // Jezeli odebrany zostanie znak 0
 		//size = sprintf(Data, "STOP\n\r");
 		HAL_GPIO_WritePin(LED_CTR_GPIO_Port, LED_CTR_Pin, GPIO_PIN_RESET);
+    isRunning = false;
 		break;
  
 	case 1: // Jezeli odebrany zostanie znak 1
 		//size = sprintf(Data, "START\n\r");
 		HAL_GPIO_WritePin(LED_CTR_GPIO_Port, LED_CTR_Pin, GPIO_PIN_SET);
+    isRunning = true;
 		break;
  
 	default: // Jezeli odebrano nieobslugiwany znak
@@ -57,7 +60,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		break;
 	}
 
-  HAL_UART_Receive_IT(&huart6, &Rx_data, 1);
+  HAL_UART_Receive_IT(&huart6, &Rx_data, 10);
 }
 
 
