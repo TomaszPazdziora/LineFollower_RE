@@ -71,7 +71,7 @@ void Error_Handler(void);
 #define LED_SENSOR_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define SENSOR_NUMBER 2
+#define SENSOR_NUMBER 14
 #define TRESHOLD 1024
 #define CLEARED_READING 2048
 #define SENSOR_DELAY 200
