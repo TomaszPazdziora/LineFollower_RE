@@ -16,7 +16,7 @@ uint8_t* rxd = Rx_data;
 void sendMess(enum mode m, uint32_t value);  
 void ExStartCommTask(void const * argument);
 
-
-
+uint8_t frameBegin[] = {'/','$','A'};
+int frameSize = 3;
 
 #endif

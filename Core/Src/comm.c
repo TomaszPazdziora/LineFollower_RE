@@ -4,14 +4,14 @@ extern bool isRunning;
 
   void ExStartCommTask(void const * argument){
     //USART6_IRQHandler();
-    HAL_UART_Receive_IT(&huart6, &Rx_data, 10);
+    HAL_UART_Receive_IT(&huart6, &Rx_data, 1);
     HAL_UART_Transmit_IT(&huart6, mess, 4);
     for(;;) {
       while (HAL_UART_GetState(&huart6) == HAL_UART_STATE_BUSY_TX ||
       HAL_UART_GetState(&huart6) == HAL_UART_STATE_BUSY_TX_RX);
       
       //HAL_UART_Transmit(&huart6, mess, MSIZE, 1000);
-      sendMess(adc, 19);
+      //sendMess(adc, 19);
       
       //UART_Start_Receive_IT(&huart6,Rx_data, 4);
       osDelay(500);
@@ -39,6 +39,7 @@ extern bool isRunning;
 int xxxx;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
+
   xxxx=Rx_data[0]-0x30; //mod pracy;
   
 	switch (xxxx) {
@@ -60,7 +61,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		break;
 	}
 
-  HAL_UART_Receive_IT(&huart6, &Rx_data, 10);
+  HAL_UART_Receive_IT(&huart6, &Rx_data, 1);
 }
 
 
@@ -75,7 +76,23 @@ void sendMess(enum mode m, uint32_t value){
     mess[MSIZE-i] = tmp & 0xFF;
   }
   HAL_UART_Transmit_IT(&huart6, mess, MSIZE);
-  osDelay(50);
 }
 
+
+
+int findFrameBegin(uint8_t *data, int length) {
+    int i;
+    for (i = 0; i < length - frameSize + 1; i++) {
+        int j;
+        for (j = 0; j < frameSize; j++) {
+            if (data[i + j] != frameBegin[j]) {
+                break;
+            }
+        }
+        if (j == frameSize) {
+            return i+3;
+        }
+    }
+    return -1;  // Frame not found
+}
 
