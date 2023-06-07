@@ -18,20 +18,24 @@ void measure();
 void moveLeftMotor(int speed);
 void moveRightMotor(int speed);
 
+volatile bool isRunning = false;
+float KP = 10;
+float KD = 20;
+float PD = 0;
+
+volatile bool followLeft = false;
+volatile bool lostLine = false;
 
 /*--------- PD VARIABLES ----------*/
 
-#define SET_SPEED 300
+#define SET_SPEED 150
 #define MAX_SPEED ARR_VAL
 #define MIN_SPEED 0
 
 //bool isRunning = true;
 
-const float KP = 10;
-const float KD = 0.2;
-float PD = 0;
 
-int weights[SENSOR_NUMBER] = {-50, -40, -25, -15, -8, -5, -3, 3, 5, 8, 15, 25, 40, 50};
+int weights[SENSOR_NUMBER] = {0, -20, -15, -10, -8, -5, -3,  3, 5, 8, 10, 15, 20, 0};
 // int weights[SENSOR_NUMBER] = {-30, 30};
 int speedDelta = 0;
 
@@ -59,17 +63,48 @@ extern void ExStartDriveTask(void const * argument) {
 
   for(;;)
   {
-	if (isRunning) {
-       measure(); 
-	   countPDvalues();
-	   TIM4->CCR1 = leftMotorSpeed;
-	   TIM4->CCR2 = rightMotorSpeed;
-	   osDelay(50);
+    if (isRunning) {
+       measure();
+
+       // on trace
+       if (!lostLine) {
+        countPDvalues();
+        TIM4->CCR1 = leftMotorSpeed;
+        TIM4->CCR2 = rightMotorSpeed;
+
+        int leftCnt = 0;
+        int rightCnt = 0; 
+
+        for(int i = 1; i < 7; i++) {
+            if (!isWhite[i]) leftCnt++;
+        }
+        for(int i = 7; i < 13; i++) {
+            if (!isWhite[i]) rightCnt++;
+        }
+
+        if (leftCnt > rightCnt) followLeft = true;
+        else followLeft = false;
+
+        osDelay(1);
+        
+       }
+       // if line folower lost line
+       else {
+        if (followLeft) {
+            TIM4->CCR1 = 0;
+               TIM4->CCR2 = SET_SPEED;
+        }
+        else {
+            TIM4->CCR1 = SET_SPEED;
+               TIM4->CCR2 = 0;
+        }
+       }
+       
     }
-	else {
-		TIM4->CCR1 = 0;
-	   	TIM4->CCR2 = 0;
-	}
+    else {
+        TIM4->CCR1 = 0;
+           TIM4->CCR2 = 0;
+    }
   }
   /* USER CODE END StartDriveTask */
 }
@@ -79,15 +114,21 @@ extern void ExStartDriveTask(void const * argument) {
 /* ---- SENSOR FUNCTIONS ---- */
 
 void measure() {
-	HAL_ADC_Start(&hadc1);
+    HAL_ADC_Start(&hadc1);
 
-	for(int i = 0; i < SENSOR_NUMBER; i++) {
-		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-		readings[i] = HAL_ADC_GetValue(&hadc1);
+    for(int i = 0; i < SENSOR_NUMBER; i++) {
+        HAL_ADC_PollForConversion(&hadc1, 1);
+        readings[i] = HAL_ADC_GetValue(&hadc1);
+    }
 
+	lostLine = true;
+	for(int i = 1; i < SENSOR_NUMBER -1; i++) {
 		if(readings[i] < TRESHOLD) isWhite[i] = true;
-		else isWhite[i] = false;
-	}
+        else {
+            isWhite[i] = false;
+            lostLine = false;
+        }
+    }
 }
 
 void clearReadings() {
@@ -142,7 +183,8 @@ void countPDvalues() {
 	}
 
 	prevError = error;
-	error = sum/sensorsDetected;
+	if (sensorsDetected != 0)
+		error = sum/sensorsDetected;
 	speedDelta = (KP * error) + (KD * (error - prevError));
 
 	leftMotorSpeed = SET_SPEED + speedDelta;

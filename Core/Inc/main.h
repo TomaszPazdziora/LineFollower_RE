@@ -72,7 +72,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 #define SENSOR_NUMBER 14
-#define TRESHOLD 1024
+#define TRESHOLD 250
 #define CLEARED_READING 2048
 #define SENSOR_DELAY 200
 

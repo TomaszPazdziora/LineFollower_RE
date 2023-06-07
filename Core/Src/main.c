@@ -20,6 +20,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "adc.h"
+#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -90,6 +91,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_TIM4_Init();
   MX_USART6_UART_Init();
@@ -100,7 +102,6 @@ int main(void)
 
   /* Call init function for freertos objects (in freertos.c) */
   MX_FREERTOS_Init();
-
   /* Start scheduler */
   osKernelStart();
   /* We should never get here as control is now taken by the scheduler */
@@ -159,6 +160,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 }
+
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
