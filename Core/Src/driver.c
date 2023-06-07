@@ -19,7 +19,7 @@ void moveLeftMotor(int speed);
 void moveRightMotor(int speed);
 
 volatile bool isRunning = false;
-float KP = 10;
+float KP = 20;
 float KD = 20;
 float PD = 0;
 
@@ -28,7 +28,7 @@ volatile bool lostLine = false;
 
 /*--------- PD VARIABLES ----------*/
 
-#define SET_SPEED 150
+#define SET_SPEED 252
 #define MAX_SPEED ARR_VAL
 #define MIN_SPEED 0
 

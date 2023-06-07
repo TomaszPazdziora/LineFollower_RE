@@ -2,13 +2,13 @@
 #include "driver.h"
 
 
-  void ExStartCommTask(void const * argument){
+void ExStartCommTask(void const * argument){
     HAL_UART_Receive_DMA(&huart6, Rx_data, 9);
     HAL_UART_Transmit_IT(&huart6, mess, 4);
     for(;;) {
       while (HAL_UART_GetState(&huart6) == HAL_UART_STATE_BUSY_TX ||
       HAL_UART_GetState(&huart6) == HAL_UART_STATE_BUSY_TX_RX);
-      sendMess(stop, 13);
+      sendMess(stop, 50);
       osDelay(500);
       sendMess(stop, 120);
       osDelay(500);
@@ -20,7 +20,7 @@
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
   //if(Rx_data[0] != '#') return;
-	switch (Rx_data[4]) {
+	switch (Rx_data[1]) {
 	case '0': // stop
 		//size = sprintf(Data, "STOP\n\r");
 		HAL_GPIO_WritePin(LED_CTR_GPIO_Port, LED_CTR_Pin, GPIO_PIN_RESET);
